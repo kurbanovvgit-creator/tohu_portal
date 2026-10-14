@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ attempt.display_name }}</h1>
+<p>{{ attempt.score }} / {{ attempt.max_score }} · <span class="status-chip">{{ attempt.get_status_display }}</span></p>
+{% if error %}<p class="status-chip">{{ error }}</p>{% endif %}
+{% for row in rows %}
+<article class="card">
+    <h2>{{ row.item.text }}</h2>
+    <p>Jogap: {{ row.answer.payload }}</p>
+    {% if row.answer.file %}<p><a href="{{ row.answer.file.url }}">Faýl</a></p>{% endif %}
+    <p>Dogry / ölçeg: {{ row.item.correct_answer }} {{ row.item.number_value }} {{ row.item.number_unit }} {{ row.item.rubric }}</p>
+    <p>Häzirki bal: {{ row.answer.points_awarded|default:"—" }} / {{ row.item.points }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="answer_id" value="{{ row.answer.id }}">
+        <label>Täze bal <input name="points" type="number" step="0.5" value="{{ row.answer.points_awarded|default:0 }}"></label>
+        <label>Sebäbi <input name="reason" required placeholder="Näme üçin üýtgedildi"></label>
+        <label>Düşündiriş <input name="comment" value="{{ row.answer.teacher_comment }}"></label>
+        <button class="btn-primary" type="submit">Bahany sakla</button>
+    </form>
+    {% for ch in row.changes %}
+    <p>Öňki {{ ch.old_points }} → täze {{ ch.new_points }}. {{ ch.reason }}</p>
+    {% endfor %}
+</article>
+{% endfor %}
+{% endblock %}

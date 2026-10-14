@@ -1,0 +1,17 @@
+{% load static %}
+{% if lesson.interactive == "math_graph" %}
+<div id="ix-math" class="card"></div>
+<script src="{% static 'interactives/math_graph.js' %}"></script>
+{% elif lesson.interactive == "physics_circuit" %}
+<div id="ix-physics" class="card"></div>
+<script src="{% static 'interactives/physics_circuit.js' %}"></script>
+{% elif lesson.interactive == "chemistry_balance" %}
+<div id="ix-chem" class="card"></div>
+<script src="{% static 'interactives/chemistry_balance.js' %}"></script>
+{% elif lesson.interactive == "biology_cell" %}
+<div id="ix-bio" class="card"></div>
+<script src="{% static 'interactives/biology_cell.js' %}"></script>
+{% elif lesson.interactive == "informatics_algo" %}
+<div id="ix-info" class="card"></div>
+<script src="{% static 'interactives/informatics_algo.js' %}"></script>
+{% endif %}

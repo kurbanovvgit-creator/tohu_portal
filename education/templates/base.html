@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#eef5f0">
+    <title>TOHU BILIM</title>
+    <link rel="stylesheet" href="{% static 'ui.css' %}?v=10">
+</head>
+<body>
+    {% if messages %}
+    <div class="flash-wrap">
+        {% for message in messages %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <header class="topbar">
+        <a href="{% url 'home' %}" class="brand"><i></i> TOHU BILIM</a>
+        <nav class="desktop-nav" id="desktop-nav">
+            {% if user.is_authenticated %}
+                <span class="who">{{ user.username }} <span class="badge">{{ user.get_role_display }}</span></span>
+                {% if user.role == 'TH' %}
+                    <a href="{% url 'create_test_manual' %}">Synag</a>
+                    <a href="{% url 'download_backup' %}">Ätiýaç</a>
+                {% endif %}
+                <a href="{% url 'profile' %}">Profil</a>
+                <form action="{% url 'logout' %}" method="post" onsubmit="return confirm('Çykmak isleýärsiňizmi?');">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Çykmak</button>
+                </form>
+            {% else %}
+                <a href="{% url 'sapak_enter' %}">Sapaga goşul</a>
+                <a class="btn-primary" href="{% url 'login' %}">Mugallym girişi</a>
+            {% endif %}
+        </nav>
+        <button type="button" class="burger" id="burger" aria-label="Menýu" aria-expanded="false" aria-controls="drawer">
+            <span></span><span></span><span></span>
+        </button>
+    </header>
+
+    <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+    <aside class="drawer" id="drawer" hidden aria-label="Menýu">
+        <div class="drawer-head">
+            <strong>Menýu</strong>
+            <button type="button" class="drawer-close" id="drawer-close">Ýap ✕</button>
+        </div>
+        {% if user.is_authenticated %}
+            <p class="drawer-user">{{ user.username }} · {{ user.get_role_display }}</p>
+            <a href="{% url 'home' %}">Dersler</a>
+            {% if user.role == 'TH' %}
+                <a href="{% url 'create_test_manual' %}">Synag</a>
+                <a href="{% url 'download_backup' %}">Ätiýaç</a>
+            {% else %}
+                <a href="{% url 'sapak_enter' %}">Sapaga goşul</a>
+            {% endif %}
+            <a href="{% url 'profile' %}">Profil</a>
+            <form action="{% url 'logout' %}" method="post" onsubmit="return confirm('Çykmak isleýärsiňizmi?');">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">Çykmak</button>
+            </form>
+        {% else %}
+            <a href="{% url 'sapak_enter' %}">Sapaga goşul</a>
+            <a href="{% url 'home' %}">Dersler</a>
+            <a href="{% url 'login' %}">Mugallym girişi</a>
+        {% endif %}
+    </aside>
+
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="note">TOHU BILIM · oflaýn okuw · {% now "Y" %}</footer>
+
+    <script>
+    (function () {
+        var burger = document.getElementById("burger");
+        var drawer = document.getElementById("drawer");
+        var backdrop = document.getElementById("drawer-backdrop");
+        var closeBtn = document.getElementById("drawer-close");
+        if (!burger || !drawer || !backdrop) return;
+
+        function isPhone() {
+            return window.innerWidth <= 640;
+        }
+        function closeMenu(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            drawer.hidden = true;
+            backdrop.hidden = true;
+            burger.classList.remove("is-open");
+            burger.setAttribute("aria-expanded", "false");
+            document.body.classList.remove("menu-open");
+        }
+        function openMenu(e) {
+            if (e) e.preventDefault();
+            if (!isPhone()) return;
+            drawer.hidden = false;
+            backdrop.hidden = false;
+            burger.classList.add("is-open");
+            burger.setAttribute("aria-expanded", "true");
+            document.body.classList.add("menu-open");
+        }
+        window.__closeMenu = closeMenu;
+        closeMenu();
+        burger.addEventListener("click", function (e) {
+            if (!isPhone()) { closeMenu(e); return; }
+            if (drawer.hidden) openMenu(e); else closeMenu(e);
+        });
+        if (closeBtn) {
+            closeBtn.addEventListener("click", closeMenu);
+            closeBtn.addEventListener("touchend", closeMenu, { passive: false });
+        }
+        backdrop.addEventListener("click", closeMenu);
+        backdrop.addEventListener("touchend", closeMenu, { passive: false });
+        drawer.querySelectorAll("a").forEach(function (a) {
+            a.addEventListener("click", closeMenu);
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeMenu();
+        });
+        window.addEventListener("resize", function () {
+            if (!isPhone()) closeMenu();
+        });
+    })();
+    </script>
+</body>
+</html>

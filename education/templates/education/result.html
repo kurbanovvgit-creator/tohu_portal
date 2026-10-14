@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 50px auto; animation: fadeInCard 1.2s ease-in-out;">
+    <h2 style="color: #10b981; margin-bottom: 20px; text-align: center; animation: fadeInTitle 1.5s ease-in-out;">
+        Ваш результат: {{ result.score }}%
+    </h2>
+
+    {% if result.ai_feedback %}
+        <div style="background: #022c22; padding: 20px; border-left: 5px solid #10b981; border-radius: 6px; margin-top: 20px; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.1); animation: fadeInFeedback 1.8s ease-in-out;">
+            <h3 style="color: #10b981; margin-bottom: 10px;">
+Düşündiriş:
+            </h3>
+            <p style="color: #ecfdf5; line-height: 1.6;">{{ result.ai_feedback|linebreaks }}</p>
+        </div>
+    {% else %}
+        <p style="color: #10b981; text-align: center; font-weight: bold; animation: fadeInMessage 1.8s ease-in-out;">
+            Отличная работа! Вам не нужны дополнительные пояснения.
+        </p>
+    {% endif %}
+
+    <a href="/" class="btn" style="text-decoration: none; display: block; width: fit-content; margin: 20px auto 0;">На главную</a>
+</div>
+
+<!-- Добавляем Font Awesome для иконки, если не добавлено в base.html -->
+
+<style>
+    /* Анимация для карточки */
+    @keyframes fadeInCard {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Анимация для заголовка */
+    @keyframes fadeInTitle {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Анимация для фидбека или сообщения */
+    @keyframes fadeInFeedback {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeInMessage {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Анимация пульсации иконки */
+    @keyframes iconPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}

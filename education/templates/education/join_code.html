@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+    <p class="kicker">Okuwçy</p>
+    <h1>Sapaga kod bilen goşul</h1>
+    <p class="lede">Mugallymyň ekranyndaky kody ýazyň. Hasap açmak gerek däl.</p>
+    {% if error %}<p class="status-chip">{{ error }}</p>{% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <label for="code">Kod</label>
+        <input id="code" name="code" required maxlength="8" autocomplete="off" inputmode="text">
+        <div class="actions"><button class="btn-primary" type="submit">Goşul</button></div>
+    </form>
+</section>
+{% endblock %}

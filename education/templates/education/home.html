@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="hero">
+    <p class="kicker">Oflaýn synp</p>
+    <h1>Sapagy şu kompýuterden alyp bar</h1>
+    <p class="lede">Okuwçylar şol bir Wi‑Fi arkaly girýär, materialy görýär we synagy tabşyrýar.</p>
+</header>
+
+{% if user.is_authenticated and user.role == 'TH' %}
+<section class="panel">
+    <p class="kicker">Mugallym · {{ lan_origin }}</p>
+    <h2>Şu gün</h2>
+    <div class="actions">
+        <a class="btn-primary" href="#kurslar">Sapagy başlat</a>
+        <a class="btn" href="{% url 'create_test_manual' %}">Synag döret</a>
+        <a class="btn" href="{% url 'download_backup' %}">Ätiýaç nusga</a>
+    </div>
+    {% if live_sessions %}
+        <div class="people">
+            {% for s in live_sessions %}
+            <div class="person">
+                <div>
+                    <strong>{{ s.lesson.title }}</strong>
+                    <div class="kicker">{{ s.code }}</div>
+                </div>
+                <div class="actions">
+                    <a class="btn" href="{% url 'session_board' s.code %}">Sapak</a>
+                    <a class="btn" href="{% url 'class_results' s.code %}">Netijeler</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<form class="row" method="get" action="{% url 'home' %}">
+    <input type="search" name="search" placeholder="Ders gözle" value="{{ search_query|default:'' }}">
+    <button class="btn-primary" type="submit">Gözle</button>
+    {% if search_query %}<a class="btn" href="{% url 'home' %}">Arassala</a>{% endif %}
+</form>
+
+<h2 id="kurslar">Dersler</h2>
+{% if courses %}
+<div class="grid">
+    {% for course in courses %}
+    <article class="card">
+        <p class="kicker">{{ course.get_subject_display }}{% if course.group_name %} · {{ course.group_name }}{% endif %}</p>
+        <h2>{{ course.title }}</h2>
+        <p>{{ course.description|truncatewords:22 }}</p>
+        <div class="person">
+            <span>Sapak: {{ course.lessons.count }}</span>
+            <a class="btn-primary" href="{% url 'course_detail' course.id %}">Aç</a>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<p class="card">Ders ýok. Soňrak giriň.</p>
+{% endif %}
+{% endblock %}

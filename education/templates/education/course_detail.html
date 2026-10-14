@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<p class="kicker">{{ course.get_subject_display }} · {{ course.group_name }}</p>
+<h1>{{ course.title }}</h1>
+<p class="lede">{{ course.description }}</p>
+{% if user.is_authenticated %}
+    {% if user in course.students.all or user == course.author or user.role == 'TH' %}
+        <div class="people">
+            {% for lesson in lessons %}
+            <div class="person">
+                <div>
+                    <div class="kicker">Sapak {{ forloop.counter }}{% if lesson.test %} · synag{% endif %}</div>
+                    <strong>{{ lesson.title }}</strong>
+                    {% if lesson.test %}<div class="kicker">{{ lesson.test.title }}</div>{% endif %}
+                </div>
+                <a class="btn-primary" href="{% url 'lesson_detail' lesson.id %}">Aç</a>
+            </div>
+            {% empty %}
+            <p>Bu dersde sapak ýok.</p>
+            {% endfor %}
+        </div>
+    {% else %}
+        <form method="post" action="{% url 'enroll_course' course.id %}">
+            {% csrf_token %}
+            <button class="btn-primary" type="submit">Ýazyl</button>
+        </form>
+    {% endif %}
+{% else %}
+    <p>Sapaklary görmek üçin <a href="{% url 'login' %}">giriň</a> ýa-da QR kod arkaly goşulyň.</p>
+{% endif %}
+{% endblock %}

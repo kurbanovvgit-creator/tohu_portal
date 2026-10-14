@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="panel">
+    <p class="kicker">Mugallym</p>
+    <h1>Giriş</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<p class="status-chip">{{ form.non_field_errors }}</p>{% endif %}
+        <label for="id_username">Ulanyjy ady</label>
+        <input id="id_username" name="username" autofocus required>
+        <label for="id_password">Parol</label>
+        <input id="id_password" name="password" type="password" required>
+        <div class="actions"><button class="btn-primary" type="submit">Gir</button></div>
+    </form>
+</section>
+{% endblock %}

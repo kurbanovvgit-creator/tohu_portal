@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="kicker">{{ session.lesson.course.group_name }}</p>
+<h1>Netijeler</h1>
+<p>{{ session.lesson.title }}</p>
+<div class="actions">
+    <a class="btn" href="{% url 'export_results' session.code %}?fmt=csv">CSV</a>
+    <a class="btn" href="{% url 'export_results' session.code %}?fmt=xlsx">Excel</a>
+    <a class="btn" href="{% url 'session_board' session.code %}">Sapaga dolan</a>
+</div>
+<form method="post" action="{% url 'release_results' session.code %}">{% csrf_token %}
+    <button class="btn-primary" type="submit" onclick="return confirm('Okuwçylara netijeleri açmalymy?');">Netijeleri aç</button>
+</form>
+<div class="table-wrap">
+<table class="stack">
+    <thead>
+        <tr><th>Ady</th><th>Bal</th><th>%</th><th>Ýagdaý</th><th>El bilen</th></tr>
+    </thead>
+    <tbody>
+    {% for a in attempts %}
+    <tr>
+        <td data-label="Ady"><a href="{% url 'review_attempt' a.id %}">{{ a.display_name }}</a></td>
+        <td data-label="Bal">{{ a.score }} / {{ a.max_score }}</td>
+        <td data-label="%">{{ a.percent }}</td>
+        <td data-label="Ýagdaý"><span class="status-chip">{{ a.get_status_display }}</span></td>
+        <td data-label="El bilen">{{ a.pending_manual }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">Tabşyrylan iş ýok.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+<h2>Iň köp ýalňyşylan soraglar</h2>
+<ul>
+    {% for text, count in top_wrong %}<li>{{ text }} — {{ count }}</li>{% empty %}<li>Heniz belli däl.</li>{% endfor %}
+</ul>
+{% endblock %}

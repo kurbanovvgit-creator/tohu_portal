@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="panel">
+    <h1>Synagy elde döret</h1>
+    <p class="lede">Synag hökman bir sapaga birikdirilýär. Soň sapagy başladyp synaga girip bilersiňiz.</p>
+    {% if error %}<p class="status-chip">{{ error }}</p>{% endif %}
+    <form method="post" id="test-form">
+        {% csrf_token %}
+        {% if lessons %}
+        <label for="lesson_id">Sapak</label>
+        <select name="lesson_id" id="lesson_id">
+            <option value="">— saýlaň ýa-da aşakda täze dörediň —</option>
+            {% for lesson in lessons %}
+            <option value="{{ lesson.id }}">{{ lesson.course.title }} · {{ lesson.title }}{% if lesson.test %} · synag bar{% endif %}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+
+        <details class="panel" style="margin:12px 0;padding:12px;">
+            <summary>Täze sapak döret (islege görä)</summary>
+            <label for="new_course_title">Dersiň ady</label>
+            <input id="new_course_title" name="new_course_title" placeholder="Meselem: Matematika 7">
+            <label for="new_lesson_title">Sapagyň ady</label>
+            <input id="new_lesson_title" name="new_lesson_title" placeholder="Meselem: Kwadrat funksiýa">
+        </details>
+
+        <label for="title">Synagyň ady</label>
+        <input id="title" name="title" required placeholder="Meselem: Om kanuny">
+
+        <label for="duration_minutes">Wagt (minut)</label>
+        <input id="duration_minutes" name="duration_minutes" type="number" min="1" max="180" value="15">
+
+        <div id="questions-container">
+            <div class="card q-block">
+                <label>Sorag</label>
+                <input name="questions[]" required>
+                <label>Görnüş</label>
+                <select name="qtypes[]">
+                    <option value="short">Gysga jogap</option>
+                    <option value="choice">Saýlaw (dogry|ýalňyş|ýalňyş|ýalňyş)</option>
+                    <option value="number">San</option>
+                    <option value="open">Açyk jogap</option>
+                </select>
+                <label>Dogry jogap</label>
+                <input name="answers[]" required placeholder="Saýlaw: A|B|C|D (ilkinji dogry)">
+                <label>Bal</label>
+                <input name="points[]" type="number" min="0.5" step="0.5" value="1">
+            </div>
+        </div>
+        <div class="actions">
+            <button type="button" class="btn" id="add-q">Sorag goş</button>
+            <button class="btn-primary" type="submit">Ýatda sakla</button>
+        </div>
+    </form>
+
+    {% if my_tests %}
+    <h2>Siziň synaglaryňyz</h2>
+    <div class="people">
+        {% for t in my_tests %}
+        <div class="person">
+            <div>
+                <strong>{{ t.title }}</strong>
+                <div class="kicker">{{ t.questions.count }} sorag · {{ t.created_at|date:"d.m.Y H:i" }}</div>
+            </div>
+            {% with lesson=t.lesson %}
+            {% if lesson %}
+            <a class="btn" href="{% url 'lesson_detail' lesson.id %}">Sapak</a>
+            {% else %}
+            <span class="status-chip">sapaga baglanmadyk</span>
+            {% endif %}
+            {% endwith %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+<script>
+document.getElementById('add-q')?.addEventListener('click', function () {
+    const box = document.getElementById('questions-container');
+    const node = document.createElement('div');
+    node.className = 'card q-block';
+    node.innerHTML = `
+        <label>Sorag</label><input name="questions[]" required>
+        <label>Görnüş</label>
+        <select name="qtypes[]">
+            <option value="short">Gysga jogap</option>
+            <option value="choice">Saýlaw (dogry jogap A|B|C|D)</option>
+            <option value="number">San</option>
+            <option value="open">Açyk jogap</option>
+        </select>
+        <label>Dogry jogap</label>
+        <input name="answers[]" required>
+        <label>Bal</label>
+        <input name="points[]" type="number" min="0.5" step="0.5" value="1">
+        <button type="button" class="btn">Aýyr</button>`;
+    node.querySelector('button').addEventListener('click', () => node.remove());
+    box.appendChild(node);
+});
+</script>
+{% endblock %}

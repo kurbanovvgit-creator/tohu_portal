@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="card">
+    <h3 style="color: #ecfdf5; text-align: center; margin-bottom: 20px;">Выберите пользователя для переписки:</h3>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        {% for user in users %}
+            <li>
+                <a href="{% url 'private_chat' user.id %}" style="display: block; padding: 15px; color: #ecfdf5; text-decoration: none; border-bottom: 1px solid #10b981; transition: background-color 0.3s ease, transform 0.3s ease; position: relative;">
+                    {{ user.username }} <small style="color: #a0a0a0;">({{ user.get_role_display }})</small>
+                    <span style="content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 0; background-color: #10b981; transition: width 0.3s ease;"></span>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <style>
+        a:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+        }
+        a:hover span {
+            width: 100%;
+        }
+    </style>
+</section>
+{% endblock %}

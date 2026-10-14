@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<p><a href="{% url 'course_detail' lesson.course.id %}">← {{ lesson.course.title }}</a></p>
+<p class="kicker">{{ lesson.course.get_subject_display }}</p>
+<h1>{{ lesson.title }}</h1>
+{% if lesson.objective %}<p class="lede"><strong>Maksat:</strong> {{ lesson.objective }}</p>{% endif %}
+{% if user.role == 'TH' %}
+<form method="post" action="{% url 'start_session' lesson.id %}">{% csrf_token %}
+    <button class="btn-primary" type="submit">Sapagy başlat</button>
+</form>
+{% endif %}
+<article class="panel">
+    {{ lesson.content_text|linebreaks }}
+    {% if lesson.video_file %}<video controls src="{{ lesson.video_file.url }}"></video>{% endif %}
+    {% if lesson.file %}<p><a class="btn" href="{{ lesson.file.url }}">Faýly aç</a></p>{% endif %}
+</article>
+{% include "education/interactive.html" %}
+{% if lesson.test %}
+<div class="panel">
+    <p class="kicker">Synag</p>
+    <h2>{{ lesson.test.title }}</h2>
+    <p>{{ lesson.test.questions.count }} sorag · {{ lesson.test.duration_minutes }} minut</p>
+    <div class="actions">
+        <a class="btn-primary" href="{% url 'take_test' lesson.test.id %}">Synagy synagla</a>
+        {% if user.role == 'TH' %}
+        <a class="btn" href="{% url 'create_test_manual' %}">Täze synag bagla</a>
+        {% endif %}
+    </div>
+</div>
+{% elif user.role == 'TH' %}
+<p class="hint">Bu sapakda synag ýok. <a href="{% url 'create_test_manual' %}">Synag döret</a></p>
+{% endif %}
+{% endblock %}

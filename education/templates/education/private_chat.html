@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .chat-wrapper {
+        max-width: 800px;
+        margin: 50px auto;
+        background-color: #022c22;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        overflow: hidden;
+        animation: fadeInCard 1.2s ease-in-out;
+    }
+
+    .chat-header {
+        background: #022c22;
+        padding: 15px;
+        border-bottom: 1px solid #065f46;
+        text-align: center;
+        color: #ecfdf5;
+    }
+
+    .chat-header h4 {
+        margin: 0;
+        color: #10b981;
+    }
+
+    .chat-header a {
+        color: #10b981;
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: color 0.3s ease;
+    }
+
+    .chat-header a:hover {
+        color: #059669;
+    }
+
+    .chat-box {
+        height: 60vh;
+        overflow-y: auto;
+        background: #000000;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .msg {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 15px;
+        max-width: 70%;
+        position: relative;
+        animation: fadeInMessage 0.5s ease-in-out;
+        transition: transform 0.3s ease;
+    }
+
+    .msg:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Мои сообщения (справа) */
+    .msg.my {
+        align-self: flex-end;
+        background: #10b981;
+        color: #000000;
+        border-bottom-right-radius: 2px;
+    }
+
+    /* Сообщения собеседника (слева) */
+    .msg.others {
+        align-self: flex-start;
+        background: #022c22;
+        color: #ecfdf5;
+        border: 1px solid #065f46;
+        border-bottom-left-radius: 2px;
+    }
+
+    .time {
+        font-size: 0.7em;
+        opacity: 0.8;
+        display: block;
+        margin-top: 5px;
+        text-align: right;
+    }
+
+    .chat-footer {
+        background: #022c22;
+        padding: 15px;
+        border-top: 1px solid #065f46;
+    }
+
+    .input-group {
+        display: flex;
+    }
+
+    .input-group input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 6px 0 0 6px;
+        border: 1px solid #10b981;
+        background-color: #000000;
+        color: #ecfdf5;
+        transition: border-color 0.3s ease;
+    }
+
+    .input-group input:focus {
+        border-color: #059669;
+        outline: none;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .input-group button {
+        border-radius: 0 6px 6px 0;
+        background-color: #10b981;
+        color: #000000;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .input-group button:hover {
+        background-color: #059669;
+        transform: scale(1.05);
+    }
+
+    .text-center {
+        text-align: center;
+        color: #9ca3af;
+    }
+
+    /* Анимации */
+    @keyframes fadeInCard {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInMessage {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="chat-wrapper">
+    <div class="chat-header">
+        <h4>Чат с <strong>{{ recipient.username }}</strong></h4>
+        <a href="{% url 'dialogs' %}">← Назад к списку</a>
+    </div>
+
+    <div class="chat-box" id="chatBox">
+        {% for msg in chat_messages %}
+            <div class="msg {% if msg.sender == request.user %}my{% else %}others{% endif %}">
+                <div>{{ msg.text }}</div>
+                <span class="time">{{ msg.created_at|date:"H:i" }}</span>
+            </div>
+        {% empty %}
+            <p class="text-center text-muted">Здесь пока нет сообщений. Напишите первым!</p>
+        {% endfor %}
+    </div>
+
+    <form class="chat-footer" method="POST">
+        {% csrf_token %}
+        <div class="input-group">
+            <input type="text" name="text" placeholder="Введите сообщение..." required autofocus>
+            <button type="submit">Отправить</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Авто-скролл вниз
+    var chatBox = document.getElementById("chatBox");
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}

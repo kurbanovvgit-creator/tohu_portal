@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-body text-center p-5">
+            <h1 class="display-4 mb-4">Результат теста: {{ test.title }}</h1>
+            
+            <div class="mb-4">
+                <span class="h2">Вы набрали: </span>
+                <span class="display-3 fw-bold text-primary">{{ score }}</span>
+                <span class="h2 text-muted"> / {{ total }}</span>
+            </div>
+
+            <div class="progress mb-4" style="height: 30px;">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {% widthratio score total 100 %}%" 
+                     aria-valuenow="{{ score }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+                    {% widthratio score total 100 %}%
+                </div>
+            </div>
+
+            {% if request.user.role == 'TH' %}
+                <div class="alert alert-info py-2">
+                    <strong>Режим учителя:</strong> Ваши баллы сохранены, но не учитываются в общем рейтинге.
+                </div>
+            {% endif %}
+
+            <hr>
+            
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg px-4 me-md-2">На главную</a>
+                {% if request.user.role == 'TH' %}
+                    <a href="{% url 'take_test' test.id %}" class="btn btn-primary btn-lg px-4">Пройти еще раз</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

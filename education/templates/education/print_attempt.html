@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>{{ attempt.display_name }} — {{ attempt.test.title }}</h2>
+    <p>{{ attempt.score }} / {{ attempt.max_score }} ({{ attempt.percent }}%) · {{ attempt.get_status_display }}</p>
+    {% for row in rows %}
+    <p><strong>{{ row.item.text }}</strong><br>Jogap: {{ row.answer.payload }}<br>Bal: {{ row.answer.points_awarded }} / {{ row.item.points }}<br>{{ row.answer.teacher_comment }}</p>
+    {% endfor %}
+    <button type="button" onclick="window.print()">Çap et</button>
+</section>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="kicker">{{ lesson.course.get_subject_display }} · {{ lesson.course.group_name }}</p>
+<h1>{{ lesson.title }}</h1>
+{% if lesson.objective %}<p class="lede"><strong>Maksat:</strong> {{ lesson.objective }}</p>{% endif %}
+
+{% if need_name %}
+<form method="post" class="panel">
+    {% csrf_token %}
+    <h2>Sapaga goşul</h2>
+    {% if error %}<p class="status-chip">{{ error }}</p>{% endif %}
+    <label for="name">Adyňyz</label>
+    <input id="name" name="name" required maxlength="80" autocomplete="name">
+    <div class="actions"><button class="btn-primary" type="submit">Goşul</button></div>
+</form>
+{% else %}
+
+<div class="live-layout {% if teacher_view %}teacher{% endif %}">
+    {% if teacher_view %}
+    <aside class="panel join-card">
+        <p class="kicker">Okuwçylar</p>
+        <p class="code">{{ session.code }}</p>
+        <p class="join-url">{{ join_url }}</p>
+        <p><span class="status-chip">Nabor: {{ session.join_open|yesno:"açyk,ýapyk" }}</span></p>
+
+        {% if join_ips|length > 1 %}
+        <p class="lede">Telefonda işleýän Wi‑Fi IP:</p>
+        <div class="ip-list">
+            {% for ip in join_ips %}
+            <a class="{% if ip == join_ip %}is-active{% endif %}" href="?ip={{ ip }}">{{ ip }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="qr">{{ qr_svg|safe }}</div>
+
+        <div class="toolbar">
+            <form method="post" action="{% url 'toggle_join' session.code %}">{% csrf_token %}
+                <button class="btn-primary wide" type="submit">{% if session.join_open %}Nabory ýap{% else %}Nabory aç{% endif %}</button>
+            </form>
+            <a class="btn-soft wide" href="{% url 'class_results' session.code %}">Netijeler</a>
+            <button type="button" class="btn-soft" id="share-start">Ekrany görkez</button>
+            <button type="button" class="btn" id="share-stop">Bes et</button>
+        </div>
+
+        <form class="row" method="post" action="{% url 'extra_time' session.code %}">{% csrf_token %}
+            <div>
+                <label for="minutes">Goşmaça minut</label>
+                <input id="minutes" name="minutes" type="number" min="1" max="30" value="2">
+            </div>
+            <button class="btn-primary" type="submit">Wagt goş</button>
+        </form>
+
+        <p class="hint">Telefonda sertifikat duýduryşy çyksa: <strong>Dowam et</strong>.</p>
+
+        <h3>Gatnaşyjylar</h3>
+        <div class="people">
+            {% for p in participants %}
+            <div class="person"><strong>{{ p.display_name }}</strong><span class="status-chip">Goşuldy</span></div>
+            {% empty %}
+            <p class="lede">Heniz kimse goşulmady.</p>
+            {% endfor %}
+        </div>
+    </aside>
+    {% endif %}
+
+    <div>
+        <article class="panel">
+            <p class="kicker">Sapak</p>
+            {{ lesson.content_text|linebreaks }}
+            {% if lesson.video_file %}<video controls src="{{ lesson.video_file.url }}"></video>{% endif %}
+            {% if lesson.file %}<p><a class="btn" href="{{ lesson.file.url }}">Faýly aç</a></p>{% endif %}
+        </article>
+
+        {% include "education/interactive.html" %}
+
+        {% if not teacher_view %}
+        <div id="screen-view" class="panel screen-view" hidden>
+            <h2>Mugallymyň ekrany</h2>
+            <div class="screen-frame"><img id="screen-img" alt="Paýlaşylýan ekran"></div>
+            <div class="actions">
+                <button type="button" class="btn-soft" id="zoom-in">Ulalt</button>
+                <button type="button" class="btn" id="zoom-out">Kiçelt</button>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if lesson.test %}
+        <form method="get" action="{% url 'begin_attempt' session.code %}">
+            <button class="btn-primary" type="submit">Synaga başla</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+const csrftoken = "{{ csrf_token }}";
+const isTeacher = {{ teacher_view|yesno:"true,false" }};
+let zoom = 1;
+const img = document.getElementById("screen-img");
+const box = document.getElementById("screen-view");
+
+function tickScreen() {
+    if (!box || isTeacher) return;
+    fetch("{% url 'screen_image' session.code %}?t=" + Date.now()).then((r) => {
+        if (r.status === 200) return r.blob();
+        box.hidden = true;
+        return null;
+    }).then((blob) => {
+        if (!blob) return;
+        box.hidden = false;
+        const url = URL.createObjectURL(blob);
+        if (img.dataset.url) URL.revokeObjectURL(img.dataset.url);
+        img.dataset.url = url;
+        img.src = url;
+        img.style.transform = "scale(" + zoom + ")";
+        img.style.transformOrigin = "top left";
+    }).catch(() => {});
+}
+
+if (!isTeacher) {
+    setInterval(tickScreen, 250);
+    document.getElementById("zoom-in")?.addEventListener("click", () => { zoom = Math.min(3, zoom + 0.25); });
+    document.getElementById("zoom-out")?.addEventListener("click", () => { zoom = Math.max(1, zoom - 0.25); });
+}
+setInterval(() => fetch("{% url 'heartbeat' session.code %}"), 5000);
+
+const startBtn = document.getElementById("share-start");
+if (startBtn) {
+    let timer = null;
+    let stream = null;
+    startBtn.addEventListener("click", async () => {
+        try {
+            stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 5, width: 1280, height: 720 } });
+        } catch (err) {
+            alert("Ekran açylmady. Sahypany http://127.0.0.1:8000 arkaly açyň.");
+            return;
+        }
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await video.play();
+        const canvas = document.createElement("canvas");
+        canvas.width = 1280; canvas.height = 720;
+        const ctx = canvas.getContext("2d");
+        const formOn = new FormData(); formOn.append("on", "1");
+        fetch("{% url 'screen_toggle' session.code %}", { method: "POST", headers: {"X-CSRFToken": csrftoken}, body: formOn });
+        startBtn.textContent = "Ekran paýlaşylýar…";
+        startBtn.disabled = true;
+        timer = setInterval(() => {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const body = new FormData();
+                body.append("frame", blob, "frame.jpg");
+                fetch("{% url 'screen_frame' session.code %}", { method: "POST", headers: {"X-CSRFToken": csrftoken}, body });
+            }, "image/jpeg", 0.6);
+        }, 200);
+        stream.getVideoTracks()[0].addEventListener("ended", stopShare);
+    });
+    function stopShare() {
+        if (timer) clearInterval(timer);
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        const form = new FormData(); form.append("on", "0");
+        fetch("{% url 'screen_toggle' session.code %}", { method: "POST", headers: {"X-CSRFToken": csrftoken}, body: form });
+        startBtn.textContent = "Ekrany görkez";
+        startBtn.disabled = false;
+    }
+    document.getElementById("share-stop")?.addEventListener("click", stopShare);
+}
+</script>
+{% endblock %}

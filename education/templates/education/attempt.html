@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h1>{{ attempt.test.title }}</h1>
+    <div class="timer">
+        <span>Galan wagt: <strong id="clock">{{ seconds_left }}</strong> s</span>
+        <span class="status-chip" id="save-state">Jogap ýok</span>
+    </div>
+    <form id="quiz" method="post" action="{% url 'submit_attempt' attempt.id %}" onsubmit="return confirm('Synagy gutarmak isleýärsiňizmi?');">
+        {% csrf_token %}
+        {% for q in questions %}
+        <article class="card" data-qid="{{ q.id }}" data-qtype="{{ q.qtype }}">
+            <h2>{{ forloop.counter }}. {{ q.text }}</h2>
+            <p>Bal: {{ q.points }} {% if q.hint %}· Görkezme: {{ q.hint }}{% endif %}</p>
+            {% if q.qtype == "choice" %}
+                {% for opt in q.options %}
+                <label class="choice"><input type="radio" name="q{{ q.id }}" value="{{ opt }}"> {{ opt }}</label>
+                {% endfor %}
+            {% elif q.qtype == "multi" %}
+                {% for opt in q.options %}
+                <label class="choice"><input type="checkbox" name="q{{ q.id }}" value="{{ opt }}"> {{ opt }}</label>
+                {% endfor %}
+            {% elif q.qtype == "number" %}
+                <input type="text" inputmode="decimal" data-field="value" placeholder="San">
+                {% if q.number_unit %}<input type="text" data-field="unit" placeholder="Ölçeg: {{ q.number_unit }}">{% endif %}
+            {% elif q.qtype == "match" %}
+                {% for left in q.lefts %}
+                <label>{{ left }}
+                    <select data-left="{{ left }}">
+                        <option value="">—</option>
+                        {% for right in q.rights %}<option>{{ right }}</option>{% endfor %}
+                    </select>
+                </label>
+                {% endfor %}
+            {% elif q.qtype == "order" %}
+                <ol class="order" data-qid="{{ q.id }}">
+                    {% for item in q.items %}<li draggable="true">{{ item }}</li>{% endfor %}
+                </ol>
+                <p>Tertibi süýräň ýa-da düwmeler bilen üýtgediň.</p>
+                <button type="button" class="up">Ýokary</button>
+                <button type="button" class="down">Aşak</button>
+            {% elif q.qtype == "practical" %}
+                <input type="file" data-file>
+                <input type="text" data-field="note" placeholder="Gysga düşündiriş">
+            {% else %}
+                <textarea data-field="value" rows="4" placeholder="{% if q.qtype == 'open' %}Düşündirişiňiz{% else %}Jogap{% endif %}"></textarea>
+                {% if q.rubric %}<p>Ölçeg: {{ q.rubric }}</p>{% endif %}
+            {% endif %}
+        </article>
+        {% endfor %}
+        <button class="btn-primary" type="submit">Synagy gutar</button>
+    </form>
+</section>
+<script>
+const attemptId = {{ attempt.id }};
+const token = "{{ csrf_token }}";
+const clock = document.getElementById("clock");
+const stateEl = document.getElementById("save-state");
+const storageKey = "attempt-" + attemptId;
+let seconds = {{ seconds_left }};
+let pending = JSON.parse(localStorage.getItem(storageKey) || "{}");
+function mark(text) { stateEl.textContent = text; }
+function payloadOf(card) {
+    const type = card.dataset.qtype;
+    if (type === "choice") {
+        const el = card.querySelector("input:checked");
+        return { value: el ? el.value : "" };
+    }
+    if (type === "multi") {
+        return { values: [...card.querySelectorAll("input:checked")].map((el) => el.value) };
+    }
+    if (type === "match") {
+        const pairs = {};
+        card.querySelectorAll("select").forEach((sel) => { pairs[sel.dataset.left] = sel.value; });
+        return { pairs };
+    }
+    if (type === "order") {
+        return { order: [...card.querySelectorAll("li")].map((li) => li.textContent) };
+    }
+    if (type === "number") {
+        return {
+            value: card.querySelector("[data-field=value]")?.value || "",
+            unit: card.querySelector("[data-field=unit]")?.value || ""
+        };
+    }
+    return { value: card.querySelector("[data-field=value]")?.value || card.querySelector("textarea")?.value || "" };
+}
+async function push(qid, payload) {
+    pending[qid] = payload;
+    localStorage.setItem(storageKey, JSON.stringify(pending));
+    mark("Iberilmegine garaşylýar");
+    try {
+        const res = await fetch("{% url 'save_answer' attempt.id %}", {
+            method: "POST",
+            headers: {"Content-Type": "application/json", "X-CSRFToken": token},
+            body: JSON.stringify({ question_id: qid, payload })
+        });
+        if (!res.ok) throw new Error("save");
+        const data = await res.json();
+        if (data.expired) { location.href = "{% url 'attempt_result' attempt.id %}"; return; }
+        mark(data.label || "Saklandy");
+        delete pending[qid];
+        localStorage.setItem(storageKey, JSON.stringify(pending));
+        if (typeof data.seconds_left === "number") seconds = data.seconds_left;
+    } catch (err) {
+        mark("Iberilmegine garaşylýar");
+    }
+}
+document.querySelectorAll("article.card").forEach((card) => {
+    const qid = parseInt(card.dataset.qid, 10);
+    card.addEventListener("change", () => {
+        if (card.dataset.qtype === "practical") return;
+        push(qid, payloadOf(card));
+    });
+    card.addEventListener("input", () => {
+        if (card.dataset.qtype === "practical") return;
+        clearTimeout(card._t);
+        card._t = setTimeout(() => push(qid, payloadOf(card)), 400);
+    });
+    const file = card.querySelector("[data-file]");
+    if (file) {
+        file.addEventListener("change", async () => {
+            const body = new FormData();
+            body.append("question_id", qid);
+            body.append("file", file.files[0]);
+            body.append("note", card.querySelector("[data-field=note]")?.value || "");
+            mark("Iberilmegine garaşylýar");
+            const res = await fetch("{% url 'upload_practical' attempt.id %}", { method: "POST", headers: {"X-CSRFToken": token}, body });
+            if (res.ok) mark("Saklandy");
+        });
+    }
+    let selected = null;
+    card.querySelectorAll("li").forEach((li) => {
+        li.addEventListener("click", () => { selected = li; });
+        li.addEventListener("dragstart", () => { selected = li; });
+        li.addEventListener("dragover", (e) => e.preventDefault());
+        li.addEventListener("drop", () => {
+            if (!selected || selected === li) return;
+            li.parentNode.insertBefore(selected, li);
+            push(qid, payloadOf(card));
+        });
+    });
+    card.querySelector(".up")?.addEventListener("click", () => {
+        if (selected && selected.previousElementSibling) selected.parentNode.insertBefore(selected, selected.previousElementSibling);
+        push(qid, payloadOf(card));
+    });
+    card.querySelector(".down")?.addEventListener("click", () => {
+        if (selected && selected.nextElementSibling) selected.parentNode.insertBefore(selected.nextElementSibling, selected);
+        push(qid, payloadOf(card));
+    });
+});
+setInterval(() => {
+    Object.keys(pending).forEach((qid) => push(parseInt(qid, 10), pending[qid]));
+}, 2000);
+setInterval(() => {
+    seconds = Math.max(0, seconds - 1);
+    clock.textContent = seconds;
+    if (seconds === 0) document.getElementById("quiz").submit();
+}, 1000);
+setInterval(async () => {
+    const res = await fetch("{% url 'attempt_state' attempt.id %}");
+    if (!res.ok) return;
+    const data = await res.json();
+    seconds = data.seconds_left;
+    if (data.expired) location.href = "{% url 'attempt_result' attempt.id %}";
+}, 5000);
+window.addEventListener("beforeunload", (e) => {
+    if (Object.keys(pending).length) { e.preventDefault(); e.returnValue = ""; }
+});
+</script>
+{% endblock %}

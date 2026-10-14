@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ attempt.display_name }}</h1>
+<p class="code">{{ attempt.score }} / {{ attempt.max_score }}</p>
+<p><span class="status-chip">{{ attempt.percent }}% · {{ attempt.get_status_display }}</span></p>
+{% for row in rows %}
+<article class="card">
+    <h2>{{ row.item.text }}</h2>
+    <p>Jogap: {{ row.answer.payload }}</p>
+    <p>Bal: {{ row.answer.points_awarded|default:"garaşylýar" }} / {{ row.item.points }}</p>
+    {% if row.answer.teacher_comment %}<p>{{ row.answer.teacher_comment }}</p>{% endif %}
+    {% if teacher_view %}<p>Dogry: {{ row.item.correct_answer }} {{ row.item.rubric }}</p>{% endif %}
+    {% if row.item.explanation %}<p>{{ row.item.explanation }}</p>{% endif %}
+</article>
+{% endfor %}
+<p><a class="btn" href="{% url 'print_attempt' attempt.id %}">Çap</a></p>
+{% endblock %}

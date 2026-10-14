@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ user.username }}</h1>
+<p class="lede">{{ user.get_role_display }}</p>
+<h2>Meniň derslerim</h2>
+<div class="grid">
+    {% for course in my_courses %}
+    <article class="card">
+        <h2>{{ course.title }}</h2>
+        <a class="btn" href="{% url 'course_detail' course.id %}">Dowam et</a>
+    </article>
+    {% empty %}
+    <p>Ders ýok. <a href="{% url 'home' %}">Saýla</a></p>
+    {% endfor %}
+</div>
+<h2>Synaglar</h2>
+<table class="stack">
+    <thead><tr><th>Synag</th><th>Bal</th><th>Wagt</th></tr></thead>
+    <tbody>
+    {% for result in results %}
+    <tr>
+        <td data-label="Synag">{{ result.test.title }}</td>
+        <td data-label="Bal">{{ result.score }}</td>
+        <td data-label="Wagt">{{ result.date_passed|date:"d.m.Y H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Heniz synag ýok.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

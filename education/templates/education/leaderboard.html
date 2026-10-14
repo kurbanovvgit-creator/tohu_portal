@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Global and Animation Styles from Base */
+    @keyframes fadeInCard {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes iconPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes fadeInRow {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Leaderboard Container */
+    .leaderboard-container {
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 25px;
+        background: #022c22;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        color: #ecfdf5;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        animation: fadeInCard 1.2s ease-in-out;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .leaderboard-container:hover {
+        box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Heading Styles */
+    .leaderboard-container h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2em;
+        color: #10b981;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Table Styles */
+    .leader-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .leader-table thead tr {
+        background-color: #000000;
+        color: #ecfdf5;
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .leader-table th, .leader-table td {
+        padding: 15px;
+        border-bottom: 1px solid #10b981;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .leader-table th {
+        background-color: #022c22;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .leader-table tbody tr {
+        background-color: #022c22;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .leader-table tbody tr:hover {
+        background-color: #059669;
+        transform: translateY(-2px);
+    }
+
+    /* Rank Styles */
+    .rank-1 {
+        color: #ffd700; /* Gold */
+        font-weight: bold;
+    }
+
+    .rank-2 {
+        color: #c0c0c0; /* Silver */
+        font-weight: bold;
+    }
+
+    .rank-3 {
+        color: #cd7f32; /* Bronze */
+        font-weight: bold;
+    }
+
+    /* Score Badge */
+    .score-badge {
+        background-color: #10b981;
+        color: #000000;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+        min-width: 50px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .score-badge:hover {
+        transform: scale(1.1);
+    }
+
+    /* Empty Message */
+    .empty-message {
+        text-align: center;
+        font-style: italic;
+        color: #a0a0a0;
+        padding: 20px;
+    }
+</style>
+
+<div class="leaderboard-container">
+    <h2>
+        <i class="fas fa-trophy" style="margin-right: 10px; animation: iconPulse 1.5s infinite;"></i> Топ Студентов
+    </h2>
+
+    <table class="leader-table">
+        <thead>
+            <tr>
+                <th>Место</th>
+                <th>Студент</th>
+                <th>Общий счет</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr style="animation: fadeInRow {{ forloop.counter|add:1 }}s ease-in-out;">
+                    <td class="rank-{{ forloop.counter }}">
+                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                    </td>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td><span class="score-badge">{{ user.points|default:0 }}</span></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="empty-message">В рейтинге пока никого нет. Странно...</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+{% endblock %}

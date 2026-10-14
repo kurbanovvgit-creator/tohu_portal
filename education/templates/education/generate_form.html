@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 50px auto; animation: fadeInCard 1.2s ease-in-out;">
+    <h2 style="color: #10b981; margin-bottom: 20px; text-align: center; position: relative; display: inline-block; animation: fadeInTitle 1.5s ease-in-out;">
+        <i class="fas fa-magic" style="margin-right: 10px; animation: iconPulse 1.5s infinite;"></i> Генерация теста через Gemini AI
+    </h2>
+    <p style="color: #ecfdf5; text-align: center; margin-bottom: 30px; animation: fadeInMessage 1.8s ease-in-out;">
+        Введите тему, и искусственный интеллект создаст вопросы за вас.
+    </p>
+
+    <form method="post" style="text-align: center;">
+        {% csrf_token %}
+        <input type="text" name="topic" placeholder="Например: Основы квантовой физики"
+               required style="width: 80%; padding: 12px; border-radius: 6px; border: 1px solid #10b981; background-color: #022c22; color: #ecfdf5; margin-bottom: 20px; transition: border-color 0.3s ease, box-shadow 0.3s ease;">
+        <br>
+        <button type="submit" class="btn">Создать тест магией AI ✨</button>
+    </form>
+</div>
+
+<!-- Добавляем Font Awesome для иконки -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+<style>
+    /* Анимация для карточки */
+    @keyframes fadeInCard {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Анимация для заголовка */
+    @keyframes fadeInTitle {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Анимация для сообщения */
+    @keyframes fadeInMessage {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Анимация пульсации иконки */
+    @keyframes iconPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Фокус для инпута */
+    input:focus {
+        border-color: #059669;
+        outline: none;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+    }
+</style>
+{% endblock %}
